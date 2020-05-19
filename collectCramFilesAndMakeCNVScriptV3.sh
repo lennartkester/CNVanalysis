@@ -5,12 +5,12 @@
 ## normal.csv and tumor.csv need to be in corresponding order ##
 ## the scripts first copies the cram files from the isilon storage to the cluster and then launches the GATK pipeline ##
 
-folder=200410_A00295_0328_AHNVCLDMXX_rerun
+#folder=200410_A00295_0328_AHNVCLDMXX_rerun
 
 #######################################################
 
 
-wd=/hpc/pmc_gen/lkester/CNV_calling/${folder}
+wd=$PWD
 
 rm -f tumorCramList.csv
 rm -f normalCramList.csv
@@ -32,10 +32,10 @@ cat ${wd}/normal.csv | while read l ; do rsync -avzP /data/isi/p/pmc_research/om
 mkdir -p ${wd}/stdout
 
 numberOfSamples=$(cat tumor.csv | wc -l )
-panelOfNormals='/hpc/pmc_gen/lkester/CNV_calling/reference/20200428_PoN_padded250_mimp5.hdf5'
+panelOfNormals='/hpc/pmc_gen/lkester/bin/CNVcallingScripts/20200428_PoN_padded250_mimp5.hdf5'
 reference='/hpc/pmc_gen/lkester/CNV_calling/reference/Homo_sapiens_assembly38.fasta'
 #interval_list='/hpc/pmc_gen/references/hg38bundle/v0/MedExome_hg38_capture_targets.interval_list'
-interval_list='/hpc/pmc_gen/lkester/CNV_calling/reference/MedExome_hg38_capture_targets_padded250.interval_list'
+interval_list='/hpc/pmc_gen/lkester/bin/CNVcallingScripts/MedExome_hg38_capture_targets_padded250.interval_list'
 dbSNP='/hpc/pmc_gen/lkester/CNV_calling/reference/1000G_phase1.snps.high_confidence.hg38.vcf.gz'
 
 for i in $(seq 1 $numberOfSamples) 
@@ -69,8 +69,6 @@ cat > ${wd}/${tumor/%.cram/}.CNVcalling.sh <<EOF
 #SBATCH -o ${wd}/stdout/${tumor/%cram/out}
 #SBATCH -e ${wd}/stdout/${tumor/%cram/err}
 
-tumor=$tumor
-normal=$normal
 cd $wd
 
 ## perform GATK CollectReadCounts for tumor and normal ##
@@ -231,19 +229,19 @@ module load R/3.5.1
           -O ${prefixNormal}.called.seg
 
 
-Rscript /hpc/pmc_gen/lkester/bin/Rscripts/CNVtargetPlot.R \
+Rscript /hpc/pmc_gen/lkester/bin/CNVcallingScripts/CNVtargetPlot.R \
         ${tumorDenoisedCN/%tsv/igv} \
         ${normalDenoisedCN/%tsv/igv} \
         ${prefixTumor}.called.igv.seg \
         /hpc/pmc_gen/lkester/CNV_calling/20200406_panCancerCNV.bed
 
-Rscript /hpc/pmc_gen/lkester/bin/Rscripts/CNVtargetPlot.R \
+Rscript /hpc/pmc_gen/lkester/bin/CNVcallingScripts/CNVtargetPlot.R \
         ${tumorDenoisedCN/%tsv/igv} \
         ${normalDenoisedCN/%tsv/igv} \
         ${prefixTumor}.called.igv.seg \
-        /hpc/pmc_gen/lkester/CNV_calling/20200406_hematoOncoCNV.bed
+        /hpc/pmc_gen/lkester/CNV_calling/20200421_hematoOncoCNV.bed
 
-Rscript /hpc/pmc_gen/lkester/bin/Rscripts/CNVtargetPlot.R \
+Rscript /hpc/pmc_gen/lkester/bin/CNVcallingScripts/CNVtargetPlot.R \
         ${tumorDenoisedCN/%tsv/igv} \
         ${normalDenoisedCN/%tsv/igv} \
         ${prefixTumor}.called.igv.seg \
