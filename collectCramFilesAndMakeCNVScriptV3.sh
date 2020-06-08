@@ -9,25 +9,48 @@
 
 #######################################################
 
+submit=false
+collectFiles=false
+
+while test $# -gt 0
+do
+    case "$1" in
+        --submit) submit=true
+            ;;
+        --collectFiles) collectFiles=true
+            ;;
+        --*) echo "bad option $1"
+            ;;
+        *) echo "argument $1"
+            ;;
+    esac
+    shift
+done
+
+
+
 
 wd=$PWD
 
-rm -f tumorCramList.csv
-rm -f normalCramList.csv
+if $collectFiles
+then
+	rm -f tumorCramList.csv
+	rm -f normalCramList.csv
 
-cd /data/isi/p/pmc_research/omics/WXS
+	cd /data/isi/p/pmc_research/omics/WXS
 
-cat ${wd}/tumor.csv | while read l ; do ls ${l}*.cram | head -1 >> ${wd}/tumorCramList.csv ; done
-cat ${wd}/normal.csv | while read l ; do ls ${l}*.cram | head -1 >> ${wd}/normalCramList.csv ; done
+	cat ${wd}/tumor.csv | while read l ; do ls ${l}*.cram | head -1 >> ${wd}/tumorCramList.csv ; done
+	cat ${wd}/normal.csv | while read l ; do ls ${l}*.cram | head -1 >> ${wd}/normalCramList.csv ; done
 
-cd $wd
+	cd $wd
 
-cat ${wd}/tumorCramList.csv | while read l ; do rsync -avzP /data/isi/p/pmc_research/omics/WXS/${l} ${wd}/ ; done
-cat ${wd}/tumorCramList.csv | while read l ; do rsync -avzP /data/isi/p/pmc_research/omics/WXS/${l/%cram/crai} ${wd}/ ; done
+	cat ${wd}/tumorCramList.csv | while read l ; do rsync -avzP /data/isi/p/pmc_research/omics/WXS/${l} ${wd}/ ; done
+	cat ${wd}/tumorCramList.csv | while read l ; do rsync -avzP /data/isi/p/pmc_research/omics/WXS/${l/%cram/crai} ${wd}/ ; done
 
-cat ${wd}/normalCramList.csv | while read l ; do rsync -avzP /data/isi/p/pmc_research/omics/WXS/${l} ${wd}/ ; done
-cat ${wd}/normalCramList.csv | while read l ; do rsync -avzP /data/isi/p/pmc_research/omics/WXS/${l/%cram/crai} ${wd}/ ; done
-cat ${wd}/normal.csv | while read l ; do rsync -avzP /data/isi/p/pmc_research/omics/WXS/${l}*WXS.vcf.gz ${wd}/ ; done
+	cat ${wd}/normalCramList.csv | while read l ; do rsync -avzP /data/isi/p/pmc_research/omics/WXS/${l} ${wd}/ ; done
+	cat ${wd}/normalCramList.csv | while read l ; do rsync -avzP /data/isi/p/pmc_research/omics/WXS/${l/%cram/crai} ${wd}/ ; done
+	cat ${wd}/normal.csv | while read l ; do rsync -avzP /data/isi/p/pmc_research/omics/WXS/${l}*WXS.vcf.gz ${wd}/ ; done
+fi
 
 mkdir -p ${wd}/stdout
 
@@ -270,7 +293,11 @@ EOF
 #cat arrayLine.sh /hpc/pmc_gen/lkester/CNV_calling/CNVcallingScript.sh > ${wd}/${tumor/%.cram/}_CNVcalling.sh
 #rm arrayLine.sh
 
-#sbatch ${wd}/${tumor/%.cram/}.CNVcalling.sh
+if $submit
+then
+	sbatch ${wd}/${tumor/%.cram/}.CNVcalling.sh
+fi
+
 done
 
 
