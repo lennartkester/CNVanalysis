@@ -32,7 +32,7 @@ cat ${wd}/normal.csv | while read l ; do rsync -avzP /data/isi/p/pmc_research/om
 mkdir -p ${wd}/stdout
 
 numberOfSamples=$(cat tumor.csv | wc -l )
-panelOfNormals='/hpc/pmc_gen/lkester/bin/CNVcallingScripts/20200428_PoN_padded250_mimp5.hdf5'
+panelOfNormals='/hpc/pmc_gen/lkester/CNV_calling/reference/20200602_PoN.hdf5'
 reference='/hpc/pmc_gen/lkester/CNV_calling/reference/Homo_sapiens_assembly38.fasta'
 #interval_list='/hpc/pmc_gen/references/hg38bundle/v0/MedExome_hg38_capture_targets.interval_list'
 interval_list='/hpc/pmc_gen/lkester/bin/CNVcallingScripts/MedExome_hg38_capture_targets_padded250.interval_list'
@@ -219,6 +219,21 @@ module load R/3.5.1
         --output-prefix ${prefixNormal}_normal \
         -O ./
 
+/hpc/pmc_gen/lkester/bin/gatk-4.1.5.0/gatk PlotDenoisedCopyRatios \
+        --denoised-copy-ratios $tumorDenoisedCN \
+        --standardized-copy-ratios $tumorStandardizedCN \
+        --sequence-dictionary /hpc/pmc_gen/lkester/CNV_calling/Homo_sapiens_assembly38_noDecoys.dict \
+        --output-prefix ${prefixTumor}_tumor \
+        -O ./
+
+/hpc/pmc_gen/lkester/bin/gatk-4.1.5.0/gatk PlotDenoisedCopyRatios \
+        --denoised-copy-ratios $normalDenoisedCN \
+        --standardized-copy-ratios $normalStandardizedCN \
+        --sequence-dictionary /hpc/pmc_gen/lkester/CNV_calling/Homo_sapiens_assembly38_noDecoys.dict \
+        --output-prefix ${prefixNormal}_tumor \
+        -O ./
+
+
 
 /hpc/pmc_gen/lkester/bin/gatk-4.1.5.0/gatk CallCopyRatioSegments \
           -I ${prefixTumor}.cr.seg \
@@ -239,7 +254,7 @@ Rscript /hpc/pmc_gen/lkester/bin/CNVcallingScripts/CNVtargetPlot.R \
         ${tumorDenoisedCN/%tsv/igv} \
         ${normalDenoisedCN/%tsv/igv} \
         ${prefixTumor}.called.igv.seg \
-        /hpc/pmc_gen/lkester/CNV_calling/20200421_hematoOncoCNV.bed
+        /hpc/pmc_gen/lkester/CNV_calling/20200528_hematoOncoCNV.bed
 
 Rscript /hpc/pmc_gen/lkester/bin/CNVcallingScripts/CNVtargetPlot.R \
         ${tumorDenoisedCN/%tsv/igv} \
@@ -247,7 +262,7 @@ Rscript /hpc/pmc_gen/lkester/bin/CNVcallingScripts/CNVtargetPlot.R \
         ${prefixTumor}.called.igv.seg \
         /hpc/pmc_gen/lkester/CNV_calling/20200406_neuroOncoCNV.bed
 
-convert ${prefixTumor}_tumor.modeled.png ${prefixNormal}_normal.modeled.png ${prefixTumor}.20200406_panCancerCNV.png ${prefixTumor}.20200406_hematoOncoCNV.png ${prefixTumor}.20200406_neuroOncoCNV.png ${prefixTumor}.CNVreport.pdf
+convert ${prefixTumor}_tumor.modeled.png ${prefixNormal}_normal.modeled.png ${prefixTumor}.20200406_panCancerCNV.png ${prefixTumor}.20200528_hematoOncoCNV.png ${prefixTumor}.20200406_neuroOncoCNV.png ${prefixTumor}.CNVreport.pdf
 
 EOF
 
